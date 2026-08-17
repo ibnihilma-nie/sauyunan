@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAUYUNAN - Pendidikan Inklusif Berbasis Kearifan Lokal</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: '#FDFBF7',
+                        earth: { DEFAULT: '#8B5A2B', dark: '#603813', light: '#C4976E' },
+                        leaf: { DEFAULT: '#4A7C59', dark: '#2F523A', light: '#74A784' },
+                        beige: { DEFAULT: '#E5D3B3', dark: '#D4B886' },
+                        blackaccent: '#2D2D2D'
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'], // Menggunakan Nunito untuk kesan ramah anak
+                    },
+                    backgroundImage: {
+                        'pattern': "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2V0h2v20h2v2H20v-1.5zM0 20h2v20H0V20zm4 0h2v20H4V20zm4 0h2v20H8V20zm4 0h2v20h-2V20zm4 0h2v20h-2V20zm4 4h20v2H20v-2zm0 4h20v2H20v-2zm0 4h20v2H20v-2zm0 4h20v2H20v-2z' fill='%238b5a2b' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E\")",
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Nunito', sans-serif; scroll-behavior: smooth; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-card { background: rgba(253, 251, 247, 0.9); backdrop-filter: blur(10px); }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-cream text-blackaccent antialiased selection:bg-leaf selection:text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const DATA = {
+            modules: [
+                { id: 1, title: "Kehidupan Masyarakat Baduy", icon: "fa-leaf", desc: "Mengenal harmoni kehidupan yang menyatu dengan alam.", level: "Dasar", color: "bg-leaf/10 text-leaf" },
+                { id: 2, title: "Nilai Sauyunan", icon: "fa-handshake", desc: "Memahami makna kebersamaan dan tolong-menolong.", level: "Dasar", color: "bg-earth/10 text-earth" },
+                { id: 3, title: "Musyawarah", icon: "fa-comments", desc: "Menyelesaikan masalah dengan diskusi dan mufakat.", level: "Menengah", color: "bg-blue-100 text-blue-700" },
+                { id: 4, title: "Kepedulian Alam", icon: "fa-seedling", desc: "Menjaga lingkungan sebagai bagian dari diri kita.", level: "Dasar", color: "bg-green-100 text-green-700" },
+                { id: 5, title: "Kesederhanaan", icon: "fa-house", desc: "Hidup cukup dan mensyukuri apa yang ada.", level: "Menengah", color: "bg-beige-dark/20 text-earth-dark" },
+                { id: 6, title: "Gotong Royong", icon: "fa-people-carry-box", desc: "Bekerja sama menyelesaikan project untuk kepentingan bersama.", level: "Lanjut", color: "bg-orange-100 text-orange-700" },
+            ],
+            projects: [
+                { id: 1, title: "Peduli Lingkungan Sekolah", desc: "Bekerja bersama mengidentifikasi masalah lingkungan sekolah dan membuat solusi sederhana.", progress: 60, members: 4, deadline: "3 Hari lagi", status: "Berjalan" },
+                { id: 2, title: "Mading Keberagaman", desc: "Membuat majalah dinding yang menceritakan budaya dari masing-masing siswa.", progress: 100, members: 5, deadline: "Selesai", status: "Selesai" },
+                { id: 3, title: "Kebun Mini Kelas", desc: "Menanam dan merawat tanaman apotek hidup di area sekolah secara bergiliran.", progress: 20, members: 6, deadline: "2 Minggu", status: "Mulai" },
+            ],
+            quiz: [
+                { q: "Ketika salah satu anggota kelompok mengalami kesulitan memahami tugas, apa tindakan yang paling sesuai dengan nilai Sauyunan?", options: ["Membiarkannya", "Mengambil alih semua tugas", "Membantu dan bekerja bersama", "Mengeluarkannya dari kelompok"], answer: 2, explanation: "Sauyunan berarti gotong royong dan saling membantu. Membantu teman yang kesulitan adalah inti dari belajar bersama." },
+                { q: "Masyarakat Baduy sangat menjaga kelestarian alam. Bagaimana kita bisa meniru nilai ini di sekolah?", options: ["Membuang sampah sembarangan", "Memetik semua bunga di taman", "Membawa botol minum sendiri dan menjaga kebersihan", "Mencoret-coret meja"], answer: 2, explanation: "Mengurangi sampah plastik dengan membawa botol minum sendiri adalah bentuk kepedulian terhadap lingkungan sekitar." },
+                { q: "Dalam diskusi kelas, temanmu memiliki pendapat yang berbeda. Sikap yang tepat adalah?", options: ["Marah kepadanya", "Mendengarkan dan menghargai pendapatnya", "Meninggalkan diskusi", "Memaksa dia setuju dengan kita"], answer: 1, explanation: "Musyawarah mengajarkan kita untuk saling mendengarkan dan menghargai perbedaan pendapat untuk mencapai mufakat." }
+            ],
+            gallery: [
+                { id: 1, title: "Sekolah Bersih, Sekolah Sauyunan", group: "Kelompok Rajawali", school: "SDN 1 Lebak", desc: "Membersihkan area sekitar sungai dekat sekolah bersama-sama.", tags: ["Gotong Royong", "Lingkungan"], img: "https://placehold.co/600x400/4A7C59/FFF?text=Kerja+Bakti" },
+                { id: 2, title: "Taman Mini Kelas", group: "Kelompok Melati", school: "SDN 2 Suka Maju", desc: "Membuat pot dari botol bekas dan menanam bibit sayur.", tags: ["Lingkungan", "Kreativitas"], img: "https://placehold.co/600x400/8B5A2B/FFF?text=Taman+Kelas" },
+                { id: 3, title: "Pojok Baca Bersama", group: "Kelompok Mandiri", school: "SMPN 3 Pelosok", desc: "Mengumpulkan dan merapikan buku untuk area baca yang nyaman.", tags: ["Pendidikan", "Kerja Sama"], img: "https://placehold.co/600x400/E5D3B3/603813?text=Pojok+Baca" },
+            ]
+        };
+
+        const Button = ({ children, variant = 'primary', onClick, className = '' }) => {
+            const baseStyle = "px-6 py-3 rounded-full font-bold transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0 shadow-md flex items-center justify-center gap-2";
+            const variants = {
+                primary: "bg-leaf text-white hover:bg-leaf-dark hover:shadow-lg",
+                secondary: "bg-earth text-white hover:bg-earth-dark hover:shadow-lg",
+                outline: "border-2 border-earth text-earth hover:bg-earth hover:text-white",
+                ghost: "bg-transparent text-gray-600 hover:bg-beige/50 shadow-none"
+            };
+            return <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`}>{children}</button>;
+        };
+
+        const Card = ({ children, className = '' }) => (
+            <div className={`bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden ${className}`}>
+                {children}
+            </div>
+        );
+
+        const Navbar = ({ activeTab, setActiveTab }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const menu = ['Beranda', 'Tentang', 'Modul', 'Project', 'Game', 'Galeri', 'Implementasi'];
+
+            return (
+                <nav className="sticky top-0 z-50 glass-card border-b border-beige">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between h-20 items-center">
+                            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('Beranda')}>
+                                <div className="w-10 h-10 bg-leaf rounded-full flex items-center justify-center text-white font-bold text-xl shadow-inner">
+                                    <i className="fa-solid fa-seedling"></i>
+                                </div>
+                                <span className="font-extrabold text-2xl tracking-tight text-earth-dark">SAUYUNAN</span>
+                            </div>
+                            
+                            {/* Desktop Menu */}
+                            <div className="hidden md:flex space-x-1 lg:space-x-4">
+                                {menu.map(item => (
+                                    <button 
+                                        key={item} 
+                                        onClick={() => setActiveTab(item)}
+                                        className={`px-3 py-2 rounded-full font-semibold transition-colors ${activeTab === item ? 'bg-beige text-earth-dark' : 'text-gray-600 hover:text-leaf hover:bg-gray-50'}`}
+                                    >
+                                        {item}
+                                    </button>
+                                ))}
+                            </div>
+                            
+                            <div className="hidden md:flex gap-2">
+                                <Button variant="outline" onClick={() => setActiveTab('DashboardGuru')} className="py-2 px-4 text-sm">Dashboard Guru</Button>
+                                <Button variant="primary" onClick={() => setActiveTab('DashboardSiswa')} className="py-2 px-4 text-sm"><i className="fa-regular fa-user"></i> Siswa</Button>
+                            </div>
+
+                            {/* Mobile menu button */}
+                            <div className="md:hidden flex items-center">
+                                <button onClick={() => setIsOpen(!isOpen)} className="text-earth-dark focus:outline-none p-2">
+                                    <i className={`fa-solid ${isOpen ? 'fa-xmark' : 'fa-bars'} text-2xl`}></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile Menu */}
+                    {isOpen && (
+                        <div className="md:hidden bg-white border-b border-gray-100 absolute w-full shadow-lg">
+                            <div className="px-4 pt-2 pb-6 space-y-2">
+                                {menu.map(item => (
+                                    <button 
+                                        key={item} 
+                                        onClick={() => { setActiveTab(item); setIsOpen(false); }}
+                                        className={`block w-full text-left px-4 py-3 rounded-xl font-semibold ${activeTab === item ? 'bg-beige text-earth-dark' : 'text-gray-600'}`}
+                                    >
+                                        {item}
+                                    </button>
+                                ))}
+                                <div className="border-t border-gray-100 pt-4 mt-2 flex flex-col gap-2">
+                                    <Button variant="outline" onClick={() => { setActiveTab('DashboardGuru'); setIsOpen(false); }}>Dashboard Guru</Button>
+                                    <Button variant="primary" onClick={() => { setActiveTab('DashboardSiswa'); setIsOpen(false); }}>Dashboard Siswa</Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </nav>
+            );
+        };
+
+        const Footer = () => (
+            <footer className="bg-earth-dark text-beige pt-16 pb-8 border-t-[8px] border-leaf">
+                <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-leaf rounded-full flex items-center justify-center text-white"><i className="fa-solid fa-seedling"></i></div>
+                            <span className="font-extrabold text-2xl text-white">SAUYUNAN</span>
+                        </div>
+                        <p className="text-beige-dark italic">"Belajar bersama dalam semangat kebersamaan."</p>
+                    </div>
+                    <div>
+                        <h4 className="text-white font-bold mb-4">Eksplorasi</h4>
+                        <ul className="space-y-2 opacity-80">
+                            <li><a href="#" className="hover:text-white transition-colors">Tentang SAUYUNAN</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Modul Budaya</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Project Gotong Royong</a></li>
+                            <li><a href="#" className="hover:text-white transition-colors">Galeri</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="text-white font-bold mb-4">Informasi</h4>
+                        <p className="text-sm opacity-80 leading-relaxed bg-earth p-4 rounded-xl">
+                            Prototype Model Pendidikan Inklusif Berbasis Kearifan Lokal Suku Baduy untuk mendukung pendidikan di wilayah 3T.
+                        </p>
+                    </div>
+                </div>
+                <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-earth text-center text-sm opacity-60">
+                    &copy; 2026 SAUYUNAN. Prototype Project Pendidikan Inklusif.
+                </div>
+            </footer>
+        );
+
+        const Home = ({ setActiveTab }) => (
+            <div className="fade-in">
+                {/* Hero Section */}
+                <section className="relative overflow-hidden bg-pattern pt-16 pb-24 lg:pt-24 lg:pb-32">
+                    <div className="max-w-7xl mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <div className="inline-block bg-beige text-earth-dark px-4 py-2 rounded-full font-bold text-sm mb-6 shadow-sm border border-earth/20">
+                                <i className="fa-solid fa-star text-leaf mr-2"></i> Prototype Model Pendidikan 3T
+                            </div>
+                            <h1 className="text-4xl lg:text-6xl font-extrabold text-earth-dark leading-tight mb-6">
+                                Belajar Bersama dalam <br/><span className="text-leaf">Semangat Sauyunan</span>
+                            </h1>
+                            <p className="text-lg text-gray-700 mb-8 leading-relaxed max-w-xl">
+                                Model pendidikan inklusif berbasis kearifan lokal untuk menciptakan pembelajaran yang setara, kolaboratif, dan adaptif bagi peserta didik di wilayah 3T.
+                            </p>
+                            <div className="flex flex-wrap gap-4">
+                                <Button variant="primary" onClick={() => setActiveTab('Modul')} className="text-lg px-8"><i className="fa-solid fa-book-open"></i> Mulai Belajar</Button>
+                                <Button variant="outline" onClick={() => setActiveTab('Tentang')} className="text-lg px-8 bg-white/50 backdrop-blur-sm">Kenali SAUYUNAN</Button>
+                            </div>
+                        </div>
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-leaf/10 rounded-full blur-3xl transform scale-110"></div>
+                            <img src="https://placehold.co/800x600/E5D3B3/8B5A2B?text=Ilustrasi+Anak+Belajar+Bersama+di+Alam" alt="Ilustrasi Belajar" className="relative z-10 rounded-3xl shadow-2xl border-4 border-white transform rotate-2 hover:rotate-0 transition-transform duration-500" />
+                            {/* Floating Badges */}
+                            <div className="absolute -top-6 -left-6 bg-white p-4 rounded-2xl shadow-xl z-20 animate-bounce" style={{animationDuration: '3s'}}>
+                                <div className="text-leaf text-2xl text-center"><i className="fa-solid fa-hands-holding-child"></i></div>
+                                <div className="font-bold text-sm text-earth-dark mt-1">Inklusif</div>
+                            </div>
+                            <div className="absolute -bottom-8 -right-4 bg-white p-4 rounded-2xl shadow-xl z-20 animate-bounce" style={{animationDuration: '4s', animationDelay: '1s'}}>
+                                <div className="text-earth text-2xl text-center"><i className="fa-solid fa-users"></i></div>
+                                <div className="font-bold text-sm text-earth-dark mt-1">Kolaboratif</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 3 Values Section */}
+                <section className="py-20 bg-white">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="text-center mb-16">
+                            <h2 className="text-3xl font-extrabold text-earth-dark mb-4">3 Pilar Utama SAUYUNAN</h2>
+                            <div className="w-24 h-1 bg-leaf mx-auto rounded-full"></div>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {[
+                                { icon: "fa-handshake", title: "Sauyunan", desc: "Belajar dan tumbuh melalui semangat kebersamaan serta gotong royong.", color: "text-earth", bg: "bg-earth/10" },
+                                { icon: "fa-leaf", title: "Kearifan Lokal", desc: "Budaya dan lingkungan sekitar menjadi sumber belajar yang kontekstual.", color: "text-leaf", bg: "bg-leaf/10" },
+                                { icon: "fa-universal-access", title: "Inklusif", desc: "Setiap peserta didik memiliki kesempatan untuk belajar dan berpartisipasi.", color: "text-blue-600", bg: "bg-blue-100" }
+                            ].map((val, i) => (
+                                <Card key={i} className="p-8 text-center hover:-translate-y-2 transition-transform duration-300">
+                                    <div className={`w-20 h-20 mx-auto ${val.bg} ${val.color} rounded-full flex items-center justify-center text-4xl mb-6 shadow-inner`}>
+                                        <i className={`fa-solid ${val.icon}`}></i>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-earth-dark mb-4">{val.title}</h3>
+                                    <p className="text-gray-600">{val.desc}</p>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Mengapa Section */}
+                <section className="py-20 bg-beige/30">
+                    <div className="max-w-5xl mx-auto px-6 text-center">
+                        <h2 className="text-3xl font-extrabold text-earth-dark mb-6">Mengapa SAUYUNAN?</h2>
+                        <Card className="p-8 md:p-12 bg-white">
+                            <div className="text-5xl text-earth mb-6 opacity-20"><i className="fa-solid fa-quote-left"></i></div>
+                            <p className="text-xl text-gray-700 leading-relaxed italic mb-8">
+                                "Wilayah 3T masih menghadapi tantangan kesenjangan akses, keterbatasan infrastruktur, tenaga pendidik, dan sarana. SAUYUNAN hadir tidak menuntut fasilitas mewah, melainkan <strong>memanfaatkan kekuatan budaya (kearifan lokal) dan kebersamaan (kolaborasi)</strong> sebagai mesin utama pembelajaran yang inklusif."
+                            </p>
+                            <Button variant="outline" onClick={() => setActiveTab('Tentang')} className="mx-auto">Pelajari Konsep Lengkap</Button>
+                        </Card>
+                    </div>
+                </section>
+            </div>
+        );
+
+        const About = () => (
+            <div className="fade-in bg-white min-h-screen pb-20">
+                {/* Header */}
+                <div className="bg-earth-dark text-white pt-24 pb-16 text-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-pattern opacity-10"></div>
+                    <div className="relative z-10 max-w-3xl mx-auto px-6">
+                        <h1 className="text-4xl md:text-5xl font-extrabold mb-6">Mengenal SAUYUNAN</h1>
+                        <p className="text-xl text-beige">
+                            Model pendidikan inklusif yang mengadaptasi nilai kebersamaan masyarakat Baduy.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="max-w-5xl mx-auto px-6 -mt-10 relative z-20">
+                    <Card className="p-8 md:p-12 mb-16">
+                        <h2 className="text-2xl font-bold text-earth-dark mb-4">Apa itu SAUYUNAN?</h2>
+                        <p className="text-lg text-gray-700 leading-relaxed mb-8">
+                            SAUYUNAN merupakan model pendidikan yang mengadaptasi nilai kebersamaan, saling membantu, musyawarah, kepedulian terhadap lingkungan, dan gotong royong dari kearifan lokal masyarakat Baduy ke dalam sistem pembelajaran formal dan informal.
+                        </p>
+
+                        <h3 className="text-xl font-bold text-earth-dark mb-6 text-center">Alur Konsep Pembelajaran</h3>
+                        
+                        {/* Flow Diagram */}
+                        <div className="flex flex-col items-center space-y-4 py-8 bg-cream rounded-3xl border border-beige">
+                            {['Kearifan Lokal Baduy', 'Nilai Sauyunan (Gotong Royong)', 'Pembelajaran Kolaboratif', 'Pendidikan Inklusif', 'Peningkatan Mutu di Wilayah 3T'].map((step, idx, arr) => (
+                                <React.Fragment key={idx}>
+                                    <div className="bg-white px-6 py-4 rounded-xl shadow-md border-2 border-leaf/20 font-bold text-earth-dark text-center w-64 hover:scale-105 transition-transform">
+                                        {step}
+                                    </div>
+                                    {idx < arr.length - 1 && (
+                                        <div className="text-leaf text-2xl animate-bounce"><i className="fa-solid fa-arrow-down"></i></div>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    </Card>
+
+                    {/* Target Users */}
+                    <h2 className="text-3xl font-extrabold text-earth-dark mb-8 text-center">Target Pengguna</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
+                        {[
+                            { title: 'Siswa', icon: 'fa-child-reaching', bg: 'bg-orange-100', color: 'text-orange-600' },
+                            { title: 'Guru', icon: 'fa-chalkboard-user', bg: 'bg-blue-100', color: 'text-blue-600' },
+                            { title: 'Sekolah', icon: 'fa-school', bg: 'bg-green-100', color: 'text-green-600' },
+                            { title: 'Masyarakat', icon: 'fa-users', bg: 'bg-purple-100', color: 'text-purple-600' },
+                        ].map((user, i) => (
+                            <Card key={i} className="p-6 text-center flex flex-col items-center justify-center">
+                                <div className={`w-16 h-16 rounded-full ${user.bg} ${user.color} flex items-center justify-center text-3xl mb-4`}>
+                                    <i className={`fa-solid ${user.icon}`}></i>
+                                </div>
+                                <h4 className="font-bold text-lg text-gray-800">{user.title}</h4>
+                            </Card>
+                        ))}
+                    </div>
+
+                    {/* SWOT Section */}
+                    <h2 className="text-3xl font-extrabold text-earth-dark mb-8 text-center">Analisis SWOT Model</h2>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <Card className="p-6 border-t-8 border-leaf bg-leaf/5">
+                            <h3 className="font-bold text-xl text-leaf mb-4 flex items-center gap-2"><i className="fa-solid fa-arrow-trend-up"></i> STRENGTH</h3>
+                            <ul className="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Berbasis kearifan lokal yang mudah diterima</li>
+                                <li>Mendorong inklusivitas tanpa alat mahal</li>
+                                <li>Sangat kolaboratif dan kontekstual</li>
+                            </ul>
+                        </Card>
+                        <Card className="p-6 border-t-8 border-red-500 bg-red-50">
+                            <h3 className="font-bold text-xl text-red-600 mb-4 flex items-center gap-2"><i className="fa-solid fa-triangle-exclamation"></i> WEAKNESS</h3>
+                            <ul className="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Membutuhkan perubahan mindset/kesiapan guru</li>
+                                <li>Ketergantungan pada kekompakan komunitas</li>
+                                <li>Butuh adaptasi khusus tiap jenis kebutuhan siswa</li>
+                            </ul>
+                        </Card>
+                        <Card className="p-6 border-t-8 border-blue-500 bg-blue-50">
+                            <h3 className="font-bold text-xl text-blue-600 mb-4 flex items-center gap-2"><i className="fa-solid fa-lightbulb"></i> OPPORTUNITY</h3>
+                            <ul className="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Dapat direplikasi ke berbagai wilayah 3T lain</li>
+                                <li>Kolaborasi erat antara sekolah & tetua adat</li>
+                                <li>Mendukung pelestarian budaya lokal</li>
+                            </ul>
+                        </Card>
+                        <Card className="p-6 border-t-8 border-orange-500 bg-orange-50">
+                            <h3 className="font-bold text-xl text-orange-600 mb-4 flex items-center gap-2"><i className="fa-solid fa-shield-halved"></i> THREAT</h3>
+                            <ul className="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Keterbatasan akses internet untuk platform pendukung</li>
+                                <li>Perbedaan kondisi geografis ekstrim antar wilayah</li>
+                                <li>Risiko apropriasi budaya tanpa pelibatan adat</li>
+                            </ul>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Modules = () => (
+            <div className="fade-in max-w-7xl mx-auto px-6 py-12">
+                <div className="flex flex-col md:flex-row justify-between items-center mb-10">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-earth-dark mb-2">Modul Budaya Baduy</h1>
+                        <p className="text-gray-600">Pelajari nilai-nilai kearifan lokal yang dapat diterapkan di sekolah.</p>
+                    </div>
+                    <div className="mt-4 md:mt-0 flex gap-2">
+                        <span className="bg-white px-4 py-2 rounded-full text-sm font-bold shadow-sm border border-gray-100 text-leaf">Semua</span>
+                        <span className="bg-white px-4 py-2 rounded-full text-sm font-bold shadow-sm border border-gray-100 text-gray-500 cursor-not-allowed">Pemula</span>
+                    </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {DATA.modules.map(mod => (
+                        <Card key={mod.id} className="flex flex-col group hover:-translate-y-1 transition-all duration-300">
+                            <div className={`p-8 flex-1 border-b border-gray-50 flex flex-col items-center text-center`}>
+                                <div className={`w-20 h-20 rounded-2xl ${mod.color} flex items-center justify-center text-4xl mb-6 transform group-hover:scale-110 transition-transform`}>
+                                    <i className={`fa-solid ${mod.icon}`}></i>
+                                </div>
+                                <h3 className="text-xl font-bold text-earth-dark mb-3">{mod.title}</h3>
+                                <p className="text-gray-600 text-sm">{mod.desc}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 flex justify-between items-center">
+                                <span className="text-xs font-bold text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">
+                                    <i className="fa-solid fa-layer-group mr-1"></i> {mod.level}
+                                </span>
+                                <Button variant="primary" className="py-2 px-6 text-sm">Pelajari</Button>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const Project = () => (
+            <div className="fade-in max-w-7xl mx-auto px-6 py-12">
+                <div className="mb-10 bg-leaf/10 rounded-3xl p-8 border border-leaf/20 flex flex-col md:flex-row gap-8 items-center">
+                    <div className="flex-1">
+                        <h1 className="text-3xl font-extrabold text-leaf-dark mb-4">Project Sauyunan</h1>
+                        <p className="text-gray-700 leading-relaxed mb-6">
+                            Project kolaboratif di mana setiap siswa mendapatkan peran sesuai kemampuannya. Tidak ada yang tertinggal, semua berkontribusi.
+                        </p>
+                        <Button variant="primary"><i className="fa-solid fa-plus"></i> Buat Project Baru</Button>
+                    </div>
+                    <div className="w-full md:w-1/3">
+                         <img src="https://placehold.co/400x300/4A7C59/FFF?text=Kerja+Kelompok" alt="Kerja Kelompok" className="rounded-2xl shadow-lg w-full" />
+                    </div>
+                </div>
+
+                <h2 className="text-2xl font-bold text-earth-dark mb-6">Project Kelas Saat Ini</h2>
+                <div className="grid lg:grid-cols-2 gap-6">
+                    {DATA.projects.map(proj => (
+                        <Card key={proj.id} className="p-6 relative overflow-hidden">
+                            {proj.status === 'Selesai' && <div className="absolute top-0 right-0 bg-leaf text-white text-xs font-bold px-3 py-1 rounded-bl-lg">Selesai</div>}
+                            <div className="flex justify-between items-start mb-4">
+                                <h3 className="text-xl font-bold text-earth-dark w-3/4">{proj.title}</h3>
+                                <div className="flex -space-x-2">
+                                    {[...Array(Math.min(proj.members, 4))].map((_, i) => (
+                                        <div key={i} className="w-8 h-8 rounded-full bg-beige border-2 border-white flex items-center justify-center text-xs font-bold text-earth-dark shadow-sm">
+                                            <i className="fa-solid fa-user"></i>
+                                        </div>
+                                    ))}
+                                    {proj.members > 4 && <div className="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-600 shadow-sm">+{proj.members - 4}</div>}
+                                </div>
+                            </div>
+                            <p className="text-gray-600 text-sm mb-6">{proj.desc}</p>
+                            
+                            {/* Progress */}
+                            <div className="mb-6">
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="font-bold text-gray-700">Progress</span>
+                                    <span className="font-bold text-leaf">{proj.progress}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div className="bg-leaf h-2.5 rounded-full transition-all duration-1000" style={{ width: `${proj.progress}%` }}></div>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between items-center border-t border-gray-100 pt-4">
+                                <div className="text-sm text-gray-500 font-medium">
+                                    <i className="fa-regular fa-clock mr-1"></i> {proj.deadline}
+                                </div>
+                                <Button variant="outline" className="py-1.5 px-4 text-sm">Lihat Detail</Button>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const Game = () => {
+            const [state, setState] = useState('start'); // start, playing, result
+            const [currentQ, setCurrentQ] = useState(0);
+            const [score, setScore] = useState(0);
+            const [feedback, setFeedback] = useState(null); // null, correct, wrong
+
+            const handleAnswer = (idx) => {
+                const isCorrect = idx === DATA.quiz[currentQ].answer;
+                if(isCorrect) setScore(score + 100);
+                setFeedback({ isCorrect, text: DATA.quiz[currentQ].explanation });
+            };
+
+            const nextQuestion = () => {
+                setFeedback(null);
+                if(currentQ + 1 < DATA.quiz.length) {
+                    setCurrentQ(currentQ + 1);
+                } else {
+                    setState('result');
+                }
+            };
+
+            return (
+                <div className="fade-in max-w-4xl mx-auto px-6 py-12">
+                    <Card className="overflow-hidden border-4 border-beige">
+                        <div className="bg-earth text-white p-6 text-center relative">
+                            <div className="absolute inset-0 bg-pattern opacity-20"></div>
+                            <h1 className="text-3xl font-extrabold relative z-10"><i className="fa-solid fa-gamepad mr-2"></i> Misi Sauyunan</h1>
+                        </div>
+                        
+                        <div className="p-8 md:p-12 min-h-[400px] flex flex-col items-center justify-center bg-cream/50">
+                            {state === 'start' && (
+                                <div className="text-center fade-in">
+                                    <div className="text-6xl text-leaf mb-6 animate-bounce"><i className="fa-solid fa-map-location-dot"></i></div>
+                                    <h2 className="text-2xl font-bold text-earth-dark mb-4">Uji Pengetahuanmu!</h2>
+                                    <p className="text-gray-600 mb-8 max-w-md mx-auto">Selesaikan misi ini dengan menjawab pertanyaan seputar budaya, gotong royong, dan lingkungan.</p>
+                                    <Button variant="primary" onClick={() => setState('playing')} className="text-xl px-10 py-4 shadow-xl shadow-leaf/30 rounded-2xl">Mulai Misi</Button>
+                                </div>
+                            )}
+
+                            {state === 'playing' && (
+                                <div className="w-full max-w-2xl fade-in">
+                                    <div className="flex justify-between items-center mb-6 text-sm font-bold text-gray-500">
+                                        <span>Pertanyaan {currentQ + 1} dari {DATA.quiz.length}</span>
+                                        <span className="bg-beige px-3 py-1 rounded-full text-earth-dark"><i className="fa-solid fa-star text-yellow-500"></i> {score} Poin</span>
+                                    </div>
+                                    
+                                    <h3 className="text-xl md:text-2xl font-bold text-earth-dark mb-8 leading-relaxed">
+                                        {DATA.quiz[currentQ].q}
+                                    </h3>
+
+                                    {!feedback ? (
+                                        <div className="grid gap-4">
+                                            {DATA.quiz[currentQ].options.map((opt, i) => (
+                                                <button 
+                                                    key={i} 
+                                                    onClick={() => handleAnswer(i)}
+                                                    className="w-full text-left p-4 rounded-xl border-2 border-beige bg-white hover:border-leaf hover:bg-leaf/5 font-semibold text-gray-700 transition-all active:scale-[0.98]"
+                                                >
+                                                    {String.fromCharCode(65 + i)}. {opt}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="fade-in">
+                                            <div className={`p-6 rounded-2xl mb-6 ${feedback.isCorrect ? 'bg-green-100 text-green-800 border-2 border-green-300' : 'bg-red-100 text-red-800 border-2 border-red-300'}`}>
+                                                <div className="flex items-center gap-3 text-xl font-bold mb-2">
+                                                    <i className={`fa-solid ${feedback.isCorrect ? 'fa-circle-check text-green-600' : 'fa-circle-xmark text-red-600'}`}></i>
+                                                    {feedback.isCorrect ? 'Tepat Sekali!' : 'Kurang Tepat'}
+                                                </div>
+                                                <p className="text-sm md:text-base">{feedback.text}</p>
+                                            </div>
+                                            <Button variant="primary" onClick={nextQuestion} className="w-full py-4 text-lg">Lanjut <i className="fa-solid fa-arrow-right"></i></Button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {state === 'result' && (
+                                <div className="text-center fade-in">
+                                    <div className="text-7xl text-yellow-500 mb-6"><i className="fa-solid fa-trophy"></i></div>
+                                    <h2 className="text-3xl font-extrabold text-earth-dark mb-2">Misi Selesai!</h2>
+                                    <p className="text-gray-600 mb-6">Kamu mendapatkan skor total:</p>
+                                    <div className="text-5xl font-black text-leaf mb-10">{score}</div>
+                                    <Button variant="outline" onClick={() => {setState('start'); setCurrentQ(0); setScore(0);}} className="mx-auto">Main Lagi</Button>
+                                </div>
+                            )}
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const Gallery = () => (
+            <div className="fade-in max-w-7xl mx-auto px-6 py-12">
+                <div className="text-center mb-12">
+                    <h1 className="text-3xl md:text-4xl font-extrabold text-earth-dark mb-4">Galeri Sauyunan</h1>
+                    <p className="text-gray-600 max-w-2xl mx-auto">Dokumentasi hasil karya dan kegiatan kolaboratif siswa dari berbagai sekolah yang mengimplementasikan nilai-nilai Sauyunan.</p>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {DATA.gallery.map(item => (
+                        <Card key={item.id} className="group overflow-hidden">
+                            <div className="relative overflow-hidden h-48">
+                                <img src={item.img} alt={item.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                                <div className="absolute top-4 left-4 flex gap-2">
+                                    {item.tags.map(tag => (
+                                        <span key={tag} className="bg-white/90 backdrop-blur text-xs font-bold text-earth-dark px-2 py-1 rounded-md shadow-sm">
+                                            {tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="p-6">
+                                <h3 className="text-lg font-bold text-gray-800 mb-2">{item.title}</h3>
+                                <p className="text-sm text-gray-500 mb-4">{item.desc}</p>
+                                <div className="flex items-center gap-2 text-xs font-semibold text-earth bg-beige/30 p-2 rounded-lg">
+                                    <i className="fa-solid fa-users"></i> {item.group} • {item.school}
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const Implementation = () => (
+            <div className="fade-in bg-white min-h-screen">
+                <div className="max-w-5xl mx-auto px-6 py-16">
+                    <h1 className="text-4xl font-extrabold text-earth-dark mb-12 text-center">Mekanisme Implementasi</h1>
+                    
+                    {/* Vertical Timeline */}
+                    <div className="relative border-l-4 border-leaf ml-4 md:ml-1/2 space-y-12">
+                        {[
+                            { num: "01", title: "Pelatihan Guru", desc: "Guru diberikan pemahaman tentang pendidikan inklusif, nilai Sauyunan, dan cara mengoperasikan platform." },
+                            { num: "02", title: "Identifikasi Kebutuhan", desc: "Guru memetakan karakteristik, kemampuan, dan kebutuhan belajar khusus dari setiap siswa." },
+                            { num: "03", title: "Pembelajaran Inklusif", desc: "Penerapan pembelajaran kolaboratif di mana bahan ajar disesuaikan (kontekstual) dan mudah diakses semua siswa." },
+                            { num: "04", title: "Project Budaya", desc: "Siswa melakukan aksi nyata berbasis lingkungan dan budaya secara berkelompok." },
+                            { num: "05", title: "Evaluasi & Refleksi", desc: "Guru mengevaluasi hasil belajar, empati, dan penerimaan terhadap keberagaman di kelas." },
+                        ].map((step, i) => (
+                            <div key={i} className="relative pl-8 md:pl-12">
+                                <div className="absolute -left-[22px] bg-white border-4 border-leaf w-10 h-10 rounded-full flex items-center justify-center font-bold text-leaf text-sm shadow-md z-10">
+                                    {step.num}
+                                </div>
+                                <Card className="p-6 ml-4 border-l-4 border-earth-light">
+                                    <h3 className="text-xl font-bold text-earth-dark mb-2">{step.title}</h3>
+                                    <p className="text-gray-600">{step.desc}</p>
+                                </Card>
+                            </div>
+                        ))}
+                    </div>
+
+                    <h2 className="text-3xl font-extrabold text-earth-dark mt-24 mb-12 text-center">Roadmap Pengembangan</h2>
+                    <div className="flex flex-col md:flex-row gap-4 overflow-x-auto pb-8 hide-scrollbar">
+                        {[
+                            { phase: "Tahap 1", title: "Perancangan", icon: "fa-compass-drafting" },
+                            { phase: "Tahap 2", title: "Pengembangan Prototype", icon: "fa-laptop-code", active: true },
+                            { phase: "Tahap 3", title: "Pilot Project 3T", icon: "fa-paper-plane" },
+                            { phase: "Tahap 4", title: "Evaluasi", icon: "fa-magnifying-glass-chart" },
+                            { phase: "Tahap 5", title: "Replikasi Nasional", icon: "fa-earth-asia" }
+                        ].map((rm, i) => (
+                            <div key={i} className={`min-w-[200px] flex-1 p-6 rounded-2xl border-2 text-center relative ${rm.active ? 'bg-leaf text-white border-leaf shadow-xl transform scale-105 z-10' : 'bg-white text-gray-500 border-gray-200'}`}>
+                                <div className={`text-4xl mb-4 ${rm.active ? 'text-white' : 'text-earth'}`}><i className={`fa-solid ${rm.icon}`}></i></div>
+                                <div className="text-xs font-bold mb-2 opacity-70">{rm.phase}</div>
+                                <div className={`font-bold ${rm.active ? 'text-white' : 'text-earth-dark'}`}>{rm.title}</div>
+                                {i < 4 && <div className="hidden md:block absolute -right-6 top-1/2 transform -translate-y-1/2 text-gray-300 z-0 text-xl"><i className="fa-solid fa-chevron-right"></i></div>}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
+        const ChatBuddy = () => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [msgs, setMsgs] = useState([{ sender: 'bot', text: 'Halo Aisyah! Hari ini kita ada tugas gotong royong. Sudah siap belajar bersama?' }]);
+            const [options, setOptions] = useState(['Siap!', 'Jelaskan dulu', 'Aku butuh bantuan']);
+
+            const handleReply = (text) => {
+                setMsgs([...msgs, { sender: 'user', text }]);
+                setOptions([]);
+                
+                // Simulate typing delay
+                setTimeout(() => {
+                    let reply = '';
+                    let nextOps = [];
+                    if(text === 'Siap!') { reply = 'Hebat! Yuk lihat menu "Project" untuk melihat tugas kelompokmu hari ini.'; }
+                    else if(text === 'Jelaskan dulu') { reply = 'Gotong royong artinya kita bekerja sama menyelesaikan suatu tugas agar terasa lebih ringan. Setiap orang punya peran penting!'; nextOps = ['Oh, begitu!', 'Apa peranku?']; }
+                    else if(text === 'Aku butuh bantuan') { reply = 'Jangan ragu untuk meminta bantuan teman kelompokmu atau Ibu Guru ya. Kita semua belajar bersama di sini.'; nextOps = ['Terima kasih']; }
+                    else { reply = 'Tetap semangat ya! Klik menu Modul kalau kamu mau baca-baca dulu.'; }
+
+                    setMsgs(prev => [...prev, { sender: 'bot', text: reply }]);
+                    setOptions(nextOps);
+                }, 1000);
+            };
+
+            return (
+                <div className="fixed bottom-6 right-6 z-50">
+                    {isOpen && (
+                        <div className="bg-white w-80 h-96 rounded-2xl shadow-2xl border border-gray-200 flex flex-col mb-4 overflow-hidden fade-in">
+                            <div className="bg-leaf p-4 text-white flex justify-between items-center shadow-md z-10">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-leaf text-xl"><i className="fa-solid fa-robot"></i></div>
+                                    <span className="font-bold">Teman Sauyunan</span>
+                                </div>
+                                <button onClick={() => setIsOpen(false)} className="text-white hover:text-gray-200"><i className="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <div className="flex-1 p-4 bg-cream overflow-y-auto space-y-4 text-sm hide-scrollbar">
+                                {msgs.map((m, i) => (
+                                    <div key={i} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`max-w-[80%] p-3 rounded-2xl ${m.sender === 'user' ? 'bg-earth text-white rounded-br-sm' : 'bg-white text-gray-700 border border-gray-100 rounded-bl-sm shadow-sm'}`}>
+                                            {m.text}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="p-3 bg-white border-t border-gray-100 flex flex-wrap gap-2">
+                                {options.map((opt, i) => (
+                                    <button key={i} onClick={() => handleReply(opt)} className="bg-beige/50 text-earth-dark text-xs font-bold px-3 py-2 rounded-full hover:bg-beige transition-colors border border-earth/10">
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    <button onClick={() => setIsOpen(!isOpen)} className="w-16 h-16 bg-leaf hover:bg-leaf-dark text-white rounded-full shadow-2xl flex items-center justify-center text-3xl transform transition-transform hover:scale-110 relative ml-auto">
+                        <i className="fa-regular fa-comment-dots"></i>
+                        {!isOpen && <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-white"></span>}
+                    </button>
+                </div>
+            );
+        };
+
+        const DashboardSiswa = () => (
+            <div className="fade-in max-w-6xl mx-auto px-6 py-10">
+                <div className="flex items-center gap-4 mb-8">
+                    <img src="https://ui-avatars.com/api/?name=Aisyah&background=8B5A2B&color=fff&rounded=true" alt="User" className="w-16 h-16 shadow-md" />
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-earth-dark">Halo, Aisyah! 👋</h1>
+                        <p className="text-gray-600">Terus semangat belajar dan berkolaborasi ya!</p>
+                    </div>
+                </div>
+
+                <div className="grid lg:grid-cols-3 gap-8">
+                    {/* Main Stats */}
+                    <div className="lg:col-span-2 space-y-8">
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <Card className="p-6 bg-gradient-to-br from-leaf to-leaf-dark text-white shadow-leaf/30">
+                                <div className="text-leaf-light mb-2"><i className="fa-solid fa-book-open-reader text-3xl"></i></div>
+                                <div className="text-4xl font-black mb-1">3/6</div>
+                                <div className="text-sm opacity-80 font-medium">Modul Diselesaikan</div>
+                            </Card>
+                            <Card className="p-6 bg-gradient-to-br from-earth to-earth-dark text-white shadow-earth/30">
+                                <div className="text-beige mb-2"><i className="fa-solid fa-star text-3xl"></i></div>
+                                <div className="text-4xl font-black mb-1">1250</div>
+                                <div className="text-sm opacity-80 font-medium">Skor Aktivitas & Game</div>
+                            </Card>
+                        </div>
+
+                        <Card className="p-6">
+                            <h2 className="text-xl font-bold text-earth-dark mb-4 flex justify-between items-center">
+                                Project Aktif <span className="text-xs bg-leaf/10 text-leaf px-2 py-1 rounded-md">1 Sedang Berjalan</span>
+                            </h2>
+                            <div className="border border-gray-100 rounded-xl p-4 flex gap-4 items-center bg-gray-50/50">
+                                <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xl shrink-0"><i className="fa-solid fa-broom"></i></div>
+                                <div className="flex-1">
+                                    <h3 className="font-bold text-gray-800">Peduli Lingkungan Sekolah</h3>
+                                    <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2 mb-1">
+                                        <div className="bg-leaf h-1.5 rounded-full" style={{ width: '60%' }}></div>
+                                    </div>
+                                    <span className="text-xs text-gray-500">Tugasmu: Mendata alat kebersihan</span>
+                                </div>
+                                <Button variant="outline" className="text-xs px-3 py-1 hidden sm:block">Lanjutkan</Button>
+                            </div>
+                        </Card>
+                    </div>
+
+                    {/* Sidebar / Badges */}
+                    <div className="space-y-6">
+                        <Card className="p-6 bg-beige/20 border-2 border-beige/50">
+                            <h2 className="text-lg font-bold text-earth-dark mb-4 text-center">Penghargaanmu 🏆</h2>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-white p-3 rounded-xl text-center shadow-sm border border-gray-100">
+                                    <div className="text-3xl text-leaf mb-2 drop-shadow-md"><i className="fa-solid fa-medal"></i></div>
+                                    <div className="text-xs font-bold text-gray-800">Teman Sauyunan</div>
+                                </div>
+                                <div className="bg-white p-3 rounded-xl text-center shadow-sm border border-gray-100">
+                                    <div className="text-3xl text-green-500 mb-2 drop-shadow-md"><i className="fa-solid fa-seedling"></i></div>
+                                    <div className="text-xs font-bold text-gray-800">Penjaga Alam</div>
+                                </div>
+                                <div className="bg-white p-3 rounded-xl text-center shadow-sm border border-gray-100 opacity-50 grayscale">
+                                    <div className="text-3xl text-yellow-500 mb-2"><i className="fa-solid fa-handshake-angle"></i></div>
+                                    <div className="text-xs font-bold text-gray-800">Kolaborator</div>
+                                </div>
+                                <div className="bg-white p-3 rounded-xl text-center shadow-sm border border-gray-100 opacity-50 grayscale">
+                                    <div className="text-3xl text-blue-500 mb-2"><i className="fa-solid fa-lightbulb"></i></div>
+                                    <div className="text-xs font-bold text-gray-800">Pembelajar</div>
+                                </div>
+                            </div>
+                        </Card>
+
+                        <Card className="p-6">
+                            <h2 className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">Rekomendasi Berikutnya</h2>
+                            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl text-blue-800 border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors">
+                                <i className="fa-solid fa-comments mt-1"></i>
+                                <div>
+                                    <div className="font-bold text-sm">Modul: Musyawarah</div>
+                                    <div className="text-xs opacity-80 mt-1">Lanjutkan modul yang tertunda.</div>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+                <ChatBuddy />
+            </div>
+        );
+
+        const DashboardGuru = () => (
+            <div className="fade-in max-w-7xl mx-auto px-6 py-10">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-earth-dark">Dashboard Guru</h1>
+                        <p className="text-gray-600">Pantau dan petakan kebutuhan belajar siswa Anda.</p>
+                    </div>
+                    <Button variant="primary"><i className="fa-solid fa-file-export"></i> Export Laporan</Button>
+                </div>
+
+                <div className="grid lg:grid-cols-4 gap-6 mb-8">
+                    {[{t:"Total Siswa", v:"32", i:"fa-users", c:"text-blue-500 bg-blue-50"},
+                      {t:"Rata-rata Progress", v:"68%", i:"fa-chart-line", c:"text-leaf bg-leaf/10"},
+                      {t:"Project Selesai", v:"4", i:"fa-check-double", c:"text-green-500 bg-green-50"},
+                      {t:"Butuh Pendampingan", v:"3", i:"fa-hand-holding-hand", c:"text-orange-500 bg-orange-50"}].map((s,i)=>(
+                        <Card key={i} className="p-6 flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-full ${s.c} flex items-center justify-center text-xl`}><i className={`fa-solid ${s.i}`}></i></div>
+                            <div>
+                                <div className="text-sm font-bold text-gray-500">{s.t}</div>
+                                <div className="text-2xl font-black text-gray-800">{s.v}</div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+
+                <Card className="overflow-hidden">
+                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h2 className="text-lg font-bold text-earth-dark">Daftar Siswa & Pemetaan (Simulasi)</h2>
+                        <input type="text" placeholder="Cari siswa..." className="px-4 py-2 rounded-full border border-gray-200 text-sm w-64 focus:outline-none focus:border-leaf" />
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-white border-b border-gray-100 text-sm text-gray-500">
+                                    <th className="p-4 font-bold">Nama Siswa</th>
+                                    <th className="p-4 font-bold text-center">Progress</th>
+                                    <th className="p-4 font-bold text-center">Partisipasi Project</th>
+                                    <th className="p-4 font-bold text-center">Kebutuhan Khusus</th>
+                                    <th className="p-4 font-bold text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-sm">
+                                {[
+                                    { name: "Aisyah", prog: 50, part: "Tinggi", need: "Visual", warn: false },
+                                    { name: "Budi", prog: 30, part: "Rendah", need: "Pendampingan Ekstra", warn: true },
+                                    { name: "Candra", prog: 80, part: "Sangat Tinggi", need: "Kinestetik", warn: false },
+                                    { name: "Dina", prog: 45, part: "Sedang", need: "Audio", warn: false },
+                                    { name: "Eko (ABK)", prog: 20, part: "Sedang", need: "Instruksi Sederhana", warn: true }
+                                ].map((s, i) => (
+                                    <tr key={i} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                        <td className="p-4 font-semibold text-gray-800 flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-beige flex items-center justify-center text-xs text-earth-dark">{s.name.charAt(0)}</div>
+                                            {s.name}
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="w-full bg-gray-200 rounded-full h-1.5 max-w-[100px] mx-auto">
+                                                <div className={`h-1.5 rounded-full ${s.warn ? 'bg-orange-400' : 'bg-leaf'}`} style={{ width: `${s.prog}%` }}></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <span className={`px-2 py-1 rounded text-xs font-bold ${s.part.includes('Tinggi') ? 'bg-green-100 text-green-700' : s.part === 'Rendah' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{s.part}</span>
+                                        </td>
+                                        <td className="p-4 text-center text-gray-600">
+                                            {s.need}
+                                            {s.warn && <i className="fa-solid fa-triangle-exclamation text-orange-500 ml-2" title="Perlu Perhatian"></i>}
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <button className="text-earth hover:text-earth-dark p-2 bg-beige/20 rounded-lg transition-colors"><i className="fa-solid fa-chart-pie"></i> Detail</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            </div>
+        );
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('Beranda');
+
+            // Scroll to top on tab change
+            useEffect(() => { window.scrollTo(0, 0); }, [activeTab]);
+
+            const renderContent = () => {
+                switch(activeTab) {
+                    case 'Beranda': return <Home setActiveTab={setActiveTab} />;
+                    case 'Tentang': return <About />;
+                    case 'Modul': return <Modules />;
+                    case 'Project': return <Project />;
+                    case 'Game': return <Game />;
+                    case 'Galeri': return <Gallery />;
+                    case 'Implementasi': return <Implementation />;
+                    case 'DashboardSiswa': return <DashboardSiswa />;
+                    case 'DashboardGuru': return <DashboardGuru />;
+                    default: return <Home setActiveTab={setActiveTab} />;
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+                    <main className="flex-grow">
+                        {renderContent()}
+                    </main>
+                    <Footer />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
